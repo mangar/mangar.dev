@@ -1,7 +1,7 @@
 import os, sys, time, json
 import asyncio
 from mysql.connector import connect, Error
-from aiokafka import AIOKafkaConsumer
+from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 
 
 
@@ -72,7 +72,19 @@ class OrdersByUser:
 
 KAFKA_SERVER = "localhost:9092"
 KAFKA_TOPIC = "data_requests"
+KAFKA_TOPIC_RESULT = "data_result_orders_by_user"
 KAFKA_GROUP_ID = "app_00"
+
+
+
+async def produce_result(message:str):
+
+    producer = AIOKafkaProducer(bootstrap_servers=KAFKA_SERVER)
+    await producer.start()
+    try:
+        await producer.send_and_wait(KAFKA_TOPIC_RESULT, json.dumps(message, indent=4, default=str).encode("ascii"))
+    finally:
+        await producer.stop()    
 
 
 async def consume(group:str):
@@ -86,6 +98,11 @@ async def consume(group:str):
     ''')
 
     count = 0
+
+    
+    
+    
+
 
     consumer = AIOKafkaConsumer(KAFKA_TOPIC, bootstrap_servers=KAFKA_SERVER, group_id=group)
     await consumer.start()
@@ -102,6 +119,8 @@ async def consume(group:str):
             print(f'{ json.dumps(result, indent=4, default=str) }')
             print('-' * 20)
 
+            """Send the result to the 'result topic'"""
+            await produce_result(result)
 
             count += 1
             print(f'>> count: {count}')
