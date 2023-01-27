@@ -15,7 +15,7 @@ from faker import Faker
 app = FastAPI(title="Producer")
 
 KAFKA_SERVER = "localhost:9092"
-KAFKA_TOPIC = "welcome_emails"
+KAFKA_TOPIC = "welcome_emails_p5"
 
 
 aio_producer = AIOKafkaProducer(client_id=f'{KAFKA_TOPIC}_01', bootstrap_servers=KAFKA_SERVER)
@@ -58,3 +58,21 @@ async def kafka_01_producer(count: int = 1000, topic_name: str = KAFKA_TOPIC):
 
     return JSONResponse(content=responses)
 
+
+
+# async def p(count):
+#     for _ in range(count):
+#         message_id = hashlib.sha256( str.encode(fake.ean13()) ).hexdigest()
+#         message = {'name': f'{fake.name()} FastAPI', 'email':f'fast_{fake.email()}', 'id': message_id}       
+#         await aio_producer.send_and_wait(topic_name, json.dumps(message).encode("ascii"))
+#         responses.append(message)
+#         print(_)
+
+
+# if __name__ == '__main__':
+
+#     count = sys.argv[1]    
+#     await p(count)
+
+
+    

@@ -26,18 +26,6 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
-  # kafdrop:
-  #   image: obsidiandynamics/kafdrop:latest
-  #   networks: 
-  #     - broker-kafka
-  #   depends_on:
-  #     - kafka
-  #   ports:
-  #     - 19000:9000
-  #   environment:
-  #     KAFKA_BROKERCONNECT: kafka:29092
-
-
   kafkaui:
     image: provectuslabs/kafka-ui:latest
     networks: 
@@ -49,6 +37,25 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: kafka-broker
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'pwd'
+      MYSQL_ROOT_PASSWORD: 'pwd'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - todo-mysql-data:/home/mg/mysql-data-01
+
+volumes:
+  todo-mysql-data: 
 
 networks: 
   broker-kafka:
