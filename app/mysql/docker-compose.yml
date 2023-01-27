@@ -38,7 +38,12 @@ services:
       KAFKA_CLUSTERS_0_NAME: kafka-broker
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
 
+  redis: 
+    image: redislabs/redismod
+    ports:
+      - '6379:6379' 
 
+      
   db:
     image: mysql:5.7
     restart: always
@@ -56,6 +61,10 @@ services:
 
 volumes:
   todo-mysql-data: 
+
+
+
+
 
 networks: 
   broker-kafka:

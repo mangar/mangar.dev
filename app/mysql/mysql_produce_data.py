@@ -100,8 +100,11 @@ def generate_data(count=10):
 
 
 if __name__ == '__main__':
-    print (">> PRODUCE SQL DATA")
-    generate_data(10)
+    count = int(sys.argv[1]) if len(sys.argv) > 1 else 10
+    print (f">> PRODUCE SQL DATA ({count})")
+
+    generate_data(count)
+
 
 
     connect = get_connect()

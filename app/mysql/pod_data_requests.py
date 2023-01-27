@@ -66,77 +66,84 @@ class OrdersByUser:
 
 
 
+class KafkaIntegration:
+
+    KAFKA_SERVER = "localhost:9092"
+    KAFKA_TOPIC = "data_requests"
+    KAFKA_TOPIC_RESULT = "data_result_orders_by_user"
+    KAFKA_GROUP_ID = "app_00"
+
+    def describe(self) -> str:
+        print(f'''
+        ----------------------------
+        Sarting Kafka consumer
+        Server: {self.KAFKA_SERVER}
+        Topic: {self.KAFKA_TOPIC}
+        GroupID: {self.KAFKA_GROUP_ID}
+        ----------------------------
+        ''')
+
+
+    async def produce_result(self, message:str):
+        producer = AIOKafkaProducer(bootstrap_servers=self.KAFKA_SERVER)
+        await producer.start()
+        try:
+            await producer.send_and_wait(self.KAFKA_TOPIC_RESULT, json.dumps(message, indent=4, default=str).encode("ascii"))
+        finally:
+            await producer.stop()    
+
+
+    async def consume_start(self):
+        consumer = AIOKafkaConsumer(self.KAFKA_TOPIC, bootstrap_servers=self.KAFKA_SERVER, group_id=group)
+        await consumer.start()
+        count = 0
+        try:
+            async for msg in consumer:
+                mmsg = msg.value.decode("utf-8")
+
+                print(f'Request:')
+                print(f'{json.dumps( json.loads(mmsg), indent=4)}')
+                print('-' * 20)
+
+                result = DataRequests(  json.loads(mmsg) ).factory()
+                print(f'Result:')
+                print(f'{ json.dumps(result, indent=4, default=str) }')
+                print('-' * 20)
+
+                """Send the result to the 'result topic'"""
+                await self.produce_result(result)
+
+                count += 1
+                print(f'>> count: {count}')
+        except KeyboardInterrupt:
+            print("Bye bye!")            
+        finally:
+            await consumer.stop()
 
 
 
 
-KAFKA_SERVER = "localhost:9092"
-KAFKA_TOPIC = "data_requests"
-KAFKA_TOPIC_RESULT = "data_result_orders_by_user"
-KAFKA_GROUP_ID = "app_00"
 
+async def main(group:str):
 
+    kafka = KafkaIntegration()
 
-async def produce_result(message:str):
-
-    producer = AIOKafkaProducer(bootstrap_servers=KAFKA_SERVER)
-    await producer.start()
-    try:
-        await producer.send_and_wait(KAFKA_TOPIC_RESULT, json.dumps(message, indent=4, default=str).encode("ascii"))
-    finally:
-        await producer.stop()    
-
-
-async def consume(group:str):
-    print(f'''
-    ----------------------------
-    Sarting Kafka consumer
-    Server: {KAFKA_SERVER}
-    Topic: {KAFKA_TOPIC}
-    GroupID: {KAFKA_GROUP_ID}
-    ----------------------------
-    ''')
-
-    count = 0
-
-    
-    
-    
-
-
-    consumer = AIOKafkaConsumer(KAFKA_TOPIC, bootstrap_servers=KAFKA_SERVER, group_id=group)
-    await consumer.start()
-    try:
-        async for msg in consumer:
-            mmsg = msg.value.decode("utf-8")
-
-            print(f'Request:')
-            print(f'{json.dumps( json.loads(mmsg), indent=4)}')
-            print('-' * 20)
-
-            result = DataRequests(  json.loads(mmsg) ).factory()
-            print(f'Result:')
-            print(f'{ json.dumps(result, indent=4, default=str) }')
-            print('-' * 20)
-
-            """Send the result to the 'result topic'"""
-            await produce_result(result)
-
-            count += 1
-            print(f'>> count: {count}')
-    except KeyboardInterrupt:
-        print("Bye bye!")            
-    finally:
-        await consumer.stop()
+    kafka.describe()
+    await kafka.consume_start()
     
 
 
 if __name__ == '__main__':
 
-    group = sys.argv[1] if len(sys.argv) > 1 else KAFKA_GROUP_ID
+    group = sys.argv[1] if len(sys.argv) > 1 else KafkaIntegration.KAFKA_GROUP_ID
     print(f'>> {group}')
-    asyncio.run(consume(group=group))
+    asyncio.run(main(group=group))
     
+
+
+
+
+
 
 
 
