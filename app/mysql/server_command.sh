@@ -1,2 +1,2 @@
 
-uvicorn server_command:app --reload
+uvicorn server_command:app --reload --host 0.0.0.0 
