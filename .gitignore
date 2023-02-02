@@ -21,6 +21,7 @@ var/
 invoice_data*.json
 *.pdf
 .local
+.idea/
 
 # Serverless directories
 .serverless
